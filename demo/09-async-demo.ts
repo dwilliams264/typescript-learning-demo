@@ -7,26 +7,26 @@ function fetchUserData(userId: number): Promise<string> {
             } else {
                 reject('Invalid user ID');
             }
-        }, 1000);
+        }, 300);
     });
 }
 
 // Promise Chaining
 function processOrder(orderId: number): Promise<string> {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(`Order ${orderId} validated`), 500);
+        setTimeout(() => resolve(`Order ${orderId} validated`), 200);
     });
 }
 
 function chargePayment(orderId: number): Promise<string> {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(`Payment for order ${orderId} processed`), 500);
+        setTimeout(() => resolve(`Payment for order ${orderId} processed`), 200);
     });
 }
 
 function shipOrder(orderId: number): Promise<string> {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(`Order ${orderId} shipped`), 500);
+        setTimeout(() => resolve(`Order ${orderId} shipped`), 200);
     });
 }
 
@@ -55,7 +55,7 @@ async function performTask(shouldFail: boolean): Promise<string> {
             } else {
                 resolve('Task completed successfully');
             }
-        }, 500);
+        }, 100);
     });
 }
 
@@ -88,7 +88,7 @@ async function fetchWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T> 
 // Async Generator
 async function* generateNumbers(count: number): AsyncGenerator<number> {
     for (let i = 1; i <= count; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         yield i;
     }
 }
@@ -102,7 +102,7 @@ interface DataResponse<T> {
 
 async function fetchData<T>(url: string): Promise<DataResponse<T>> {
     try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         const mockData = { id: 1, name: 'Sample Data' } as unknown as T;
         return { success: true, data: mockData };
     } catch (error) {
@@ -192,4 +192,7 @@ async function parallelExecution(): Promise<string> {
     console.log('\n=== Parallel vs Sequential ===');
     console.log(await sequentialExecution());
     console.log(await parallelExecution());
-})();
+})().catch((error) => {
+    console.error('Unhandled error:', error);
+    process.exit(1);
+});
