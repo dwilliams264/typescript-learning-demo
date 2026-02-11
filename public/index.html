@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>TypeScript Practice Viewer</title>
+        <link
+            rel="icon"
+            href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>"
+        />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div class="sidebar">
+            <h1>📚 TypeScript Practice</h1>
+            <ul class="demo-list" id="demoList"></ul>
+        </div>
+
+        <div class="content">
+            <div class="output-header">
+                <div class="output-title" id="outputTitle">Select a demo to run</div>
+                <div class="header-actions hidden" id="headerActions">
+                    <button
+                        class="live-reload-button active"
+                        id="liveReloadBtn"
+                        onclick="toggleLiveReload()"
+                        title="Toggle live reload"
+                    >
+                        <span class="live-reload-indicator"></span>
+                        <span>Live</span>
+                    </button>
+                    <span class="status" id="status"></span>
+                </div>
+            </div>
+            <div class="output-content" id="output">
+                <div class="placeholder">
+                    <div style="font-size: 48px; margin-bottom: 16px">👨‍💻</div>
+                    <div>Click a demo to see its output</div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.6">
+                        Use ↑↓ arrow keys to navigate • Auto-reloads on file changes
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+</html>

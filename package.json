@@ -1,0 +1,35 @@
+{
+  "name": "typescript-learning-demo",
+  "version": "1.0.0",
+  "description": "An interactive TypeScript learning environment with a live web viewer to run demos and see console output in real-time",
+  "type": "module",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "typescript",
+    "learning",
+    "practice",
+    "demo",
+    "viewer",
+    "tutorial",
+    "examples",
+    "education",
+    "interactive"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.2.3",
+    "express": "^5.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.0.0"
+  }
+}
