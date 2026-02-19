@@ -74,9 +74,11 @@ Open **http://localhost:3000** in your browser and start exploring the demos.
 
 ## 🛠️ Available Scripts
 
-- `npm run dev` - Start the development server with live reload
-- `npm run build` - Compile TypeScript files to JavaScript
-- `npm run clean` - Remove the generated `dist/` folder
+- `npm run dev` - Build client and start the development server
+- `npm run dev:watch` - Start with auto-rebuild for both client and server
+- `npm run build` - Compile both server and client TypeScript to JavaScript
+- `npm run build:client` - Compile only the browser TypeScript (public/script.ts)
+- `npm run clean` - Remove all generated JavaScript files
 
 ## 🏗️ Project Structure
 
@@ -88,13 +90,31 @@ typescript-learning-demo/
 │   └── ...
 ├── public/                  # Web viewer frontend
 │   ├── index.html          # Main HTML page
-│   ├── script.js           # Client-side logic
+│   ├── script.ts           # Client-side TypeScript
+│   ├── script.js           # Generated - gitignored
 │   └── style.css           # Styles
-├── server.ts               # Express server for running demos
-├── package.json
-├── tsconfig.json
-└── eslint.config.js
+├── server.ts               # Express server (TypeScript)
+├── tsconfig.json           # TypeScript config for Node.js/server
+├── tsconfig.browser.json   # TypeScript config for browser/client
+└── package.json
 ```
+
+## 📐 TypeScript Architecture
+
+This project uses **two TypeScript configurations**:
+
+1. **Server Code** (`tsconfig.json`):
+    - Target: Node.js environment
+    - Module system: NodeNext (ES modules for Node)
+    - Run directly with `tsx` (no compilation needed for dev)
+
+2. **Browser Code** (`tsconfig.browser.json`):
+    - Target: Browser environment with DOM types
+    - Module system: ES2022 modules
+    - Compiled to `public/script.js` (gitignored)
+    - Must rebuild when editing `public/script.ts`
+
+**Why separate configs?** Node.js and browsers have different module systems, APIs, and runtime environments. The server needs Node APIs (fs, child_process), while the browser needs DOM APIs (document, fetch).
 
 ## 🤝 Contributing
 

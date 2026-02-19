@@ -5,9 +5,11 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "tsc",
-    "clean": "rm -rf dist"
+    "dev": "npm run build:client && tsx server.ts",
+    "dev:watch": "npm run build:client -- --watch & tsx watch server.ts",
+    "build": "tsc && npm run build:client",
+    "build:client": "tsc -p tsconfig.browser.json",
+    "clean": "rm -rf dist public/*.js public/*.js.map"
   },
   "keywords": [
     "typescript",
