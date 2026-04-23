@@ -9,10 +9,21 @@
             href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>"
         />
         <link rel="stylesheet" href="style.css" />
+        <!-- Prism.js for syntax highlighting -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
     </head>
     <body>
         <div class="sidebar">
             <h1>📚 TypeScript Practice</h1>
+            <div class="search-container">
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Search demos... (Ctrl+K)"
+                    autocomplete="off"
+                />
+            </div>
             <ul class="demo-list" id="demoList"></ul>
         </div>
 
@@ -29,20 +40,133 @@
                         <span class="live-reload-indicator"></span>
                         <span>Live</span>
                     </button>
+                    <button class="help-button" onclick="toggleHelp()" title="Keyboard shortcuts">?</button>
                     <span class="status" id="status"></span>
                 </div>
             </div>
-            <div class="output-content" id="output">
-                <div class="placeholder">
-                    <div style="font-size: 48px; margin-bottom: 16px">👨‍💻</div>
-                    <div>Click a demo to see its output</div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.6">
-                        Use ↑↓ arrow keys to navigate • Auto-reloads on file changes
+
+            <div class="split-container">
+                <div class="code-panel" id="codePanel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <span class="panel-title">Source Code</span>
+                            <span class="modified-badge hidden" id="modifiedBadge">Modified</span>
+                        </div>
+                        <div class="panel-actions">
+                            <button
+                                class="action-button"
+                                id="runModifiedBtn"
+                                onclick="runModifiedCode()"
+                                title="Run code (Ctrl/Cmd+Enter)"
+                            >
+                                <span>▶️ Run</span>
+                            </button>
+                            <button
+                                class="action-button"
+                                id="resetBtn"
+                                onclick="resetCode()"
+                                title="Reset to original (Ctrl/Cmd+R)"
+                            >
+                                <span>🔄 Reset</span>
+                            </button>
+                            <button class="copy-button" id="copyCodeBtn" title="Copy code">
+                                <span>📋</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="monaco-editor-container" id="monacoContainer">
+                        <div class="placeholder">
+                            <div style="font-size: 48px; margin-bottom: 16px">📝</div>
+                            <div>Select a demo to start coding</div>
+                            <div style="font-size: 12px; margin-top: 8px; opacity: 0.6">
+                                Ctrl/Cmd+Enter to run • Ctrl/Cmd+R to reset
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resize-handle" id="resizeHandle"></div>
+
+                <div class="output-panel" id="outputPanel">
+                    <div class="panel-header">
+                        <span class="panel-title">Console Output</span>
+                        <div class="panel-actions">
+                            <span class="execution-time" id="executionTime"></span>
+                            <button class="copy-button" id="copyOutputBtn" title="Copy output">
+                                <span>📋</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="output-content" id="output">
+                        <div class="placeholder">
+                            <div style="font-size: 48px; margin-bottom: 16px">👨‍💻</div>
+                            <div>Click a demo to see its output</div>
+                            <div style="font-size: 12px; margin-top: 8px; opacity: 0.6">
+                                Use ↑↓ arrow keys to navigate • Auto-reloads on file changes
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Keyboard Shortcuts Help Modal -->
+        <div class="modal-backdrop hidden" id="helpModal" onclick="toggleHelp()">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>⌨️ Keyboard Shortcuts</h2>
+                    <button class="close-button" onclick="toggleHelp()">×</button>
+                </div>
+                <div class="modal-content">
+                    <div class="shortcut-group">
+                        <h3>Navigation</h3>
+                        <div class="shortcut-item">
+                            <kbd>↑</kbd> / <kbd>↓</kbd>
+                            <span>Navigate between demos</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>K</kbd> / <kbd>Cmd</kbd> + <kbd>K</kbd>
+                            <span>Focus search</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Enter</kbd>
+                            <span>Run selected demo</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h3>Editing</h3>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd>
+                            <span>Run code</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl/Cmd</kbd> + <kbd>S</kbd>
+                            <span>Run code (save habit)</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl/Cmd</kbd> + <kbd>R</kbd>
+                            <span>Reset to original</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h3>Actions</h3>
+                        <div class="shortcut-item">
+                            <kbd>?</kbd>
+                            <span>Show/hide this help</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Esc</kbd>
+                            <span>Close modals</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
         <script src="script.js"></script>
     </body>
 </html>

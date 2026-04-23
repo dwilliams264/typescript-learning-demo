@@ -4,10 +4,18 @@ An interactive TypeScript learning environment with a live web viewer. Run TypeS
 
 ## ✨ Features
 
-- **🔴 Live Reload**: Automatically reruns demos when you save changes to your code
+- **✏️ Interactive Code Editor**: Edit demos in-browser with Monaco Editor (VS Code engine) and run modified code instantly
+- **🔴 Live Reload with WebSocket**: Real-time file watching with instant updates when you save changes
 - **📁 Auto-Discovery**: Automatically detects and lists all demo files in the `demo/` folder
-- **⌨️ Keyboard Navigation**: Use arrow keys (↑↓) to quickly navigate between demos
-- **🎨 Modern UI**: Clean, responsive interface with syntax-highlighted output
+- **📝 Split-Pane View**: See source code and console output side-by-side with syntax highlighting
+- **🔍 Search & Filter**: Quickly find demos with the built-in search bar (Ctrl/Cmd+K)
+- **⌨️ Keyboard Navigation**: Use arrow keys (↑↓) to navigate, ? for shortcuts help
+- **📋 Copy Buttons**: Easily copy source code or output to clipboard
+- **⏱️ Execution Time**: See how long each demo takes to run
+- **🎨 Modern UI**: Clean, responsive interface with VS Code-inspired dark theme
+- **📱 Responsive Design**: Works on desktop, tablet, and mobile devices
+- **♿ Accessible**: Full keyboard navigation with ARIA labels
+- **🔧 Resizable Panels**: Drag the divider to adjust code/output panel sizes
 - **🚀 Zero Configuration**: Just add a TypeScript file and start coding
 - **📚 Comprehensive Examples**: 10 demo files covering TypeScript fundamentals to advanced concepts
 
@@ -46,6 +54,34 @@ npm run dev
 ```
 
 Open **http://localhost:3000** in your browser and start exploring the demos.
+
+## 🎯 Using the Viewer
+
+### Navigation
+
+- Click any demo in the sidebar to run it and view its code
+- Use **↑** and **↓** arrow keys to navigate between demos
+- Press **Ctrl/Cmd+K** to focus the search bar
+- Press **?** to view all keyboard shortcuts
+
+### Features
+
+- **Split View**: Source code on the left, console output on the right
+- **Search**: Filter demos by name or number using the search bar
+- **Live Reload**: Edit any demo file and see changes instantly (WebSocket-powered)
+- **Copy**: Click 📋 buttons to copy code or output to clipboard
+- **Resize**: Drag the divider between panels to adjust sizes
+- **Execution Time**: See performance metrics for each demo run
+
+### Interactive Editing
+
+1. **Edit Mode**: Click the "✏️ Edit" button to open Monaco Editor
+2. **Modify Code**: Edit the TypeScript code with full IntelliSense support
+3. **Run Modified**: Click "▶️ Run" to execute your changes
+4. **Reset**: Click "🔄 Reset" to restore the original code
+5. **Modified Badge**: See when code differs from the original
+
+**Note**: Changes are session-only and don't affect the original demo files. Perfect for safe experimentation!
 
 ## 📝 Adding Your Own Demos
 

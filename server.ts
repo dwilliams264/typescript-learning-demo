@@ -1,14 +1,19 @@
 import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { readdir, stat } from 'fs/promises';
+import { readdir, stat, readFile, writeFile, unlink } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import chokidar from 'chokidar';
 
 const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
 const PORT = 3000;
 
 // Middleware
@@ -62,6 +67,31 @@ app.get('/api/demos', async (req, res) => {
     }
 });
 
+// Get source code of a demo
+app.get('/api/code/:id', async (req, res) => {
+    try {
+        const demos = await getDemos();
+        const demo = demos.find((ex) => ex?.id === req.params.id);
+
+        if (!demo) {
+            return res.status(404).json({ error: 'Demo not found' });
+        }
+
+        const filePath = path.join(__dirname, 'demo', demo.file);
+        const sourceCode = await readFile(filePath, 'utf-8');
+
+        res.json({
+            id: demo.id,
+            name: demo.name,
+            file: demo.file,
+            code: sourceCode,
+        });
+    } catch (error: any) {
+        console.error(`Error reading demo source:`, error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Run a demo
 app.get('/api/run/:id', async (req, res) => {
     const startTime = Date.now();
@@ -101,6 +131,65 @@ app.get('/api/run/:id', async (req, res) => {
     }
 });
 
+// Run modified code
+app.post('/api/run-code', express.json({ limit: '1mb' }), async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+        const { code, demoId } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ error: 'No code provided' });
+        }
+
+        console.log(`  → Running modified code for demo: ${demoId || 'unknown'}`);
+
+        // Write code to temporary file
+        const tempFile = path.join(__dirname, '.tmp-demo.ts');
+        await writeFile(tempFile, code, 'utf-8');
+
+        try {
+            const { stdout, stderr } = await execAsync(`tsx ${tempFile}`, {
+                cwd: __dirname,
+                timeout: 10000,
+            });
+
+            const duration = Date.now() - startTime;
+            console.log(`  ✓ Completed in ${duration}ms`);
+
+            // Clean up temp file
+            await unlink(tempFile).catch(() => {});
+
+            res.json({
+                success: true,
+                output: stdout,
+                error: stderr || null,
+            });
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            console.error(`  ✗ Failed after ${duration}ms:`, error.message);
+
+            // Clean up temp file
+            await unlink(tempFile).catch(() => {});
+
+            res.json({
+                success: false,
+                output: error.stdout || '',
+                error: error.stderr || error.message,
+            });
+        }
+    } catch (error: any) {
+        const duration = Date.now() - startTime;
+        console.error(`  ✗ Failed after ${duration}ms:`, error.message);
+
+        res.status(500).json({
+            success: false,
+            output: '',
+            error: error.message,
+        });
+    }
+});
+
 // Get file modification time for live reload
 app.get('/api/mtime/:id', async (req, res) => {
     try {
@@ -123,12 +212,55 @@ app.get('/api/mtime/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// Socket.io connection handling
+io.on('connection', (socket) => {
+    console.log(`  → Client connected: ${socket.id}`);
+
+    socket.on('disconnect', () => {
+        console.log(`  ← Client disconnected: ${socket.id}`);
+    });
+});
+
+// Watch demo files for changes
+const demoDir = path.join(__dirname, 'demo');
+const watcher = chokidar.watch(`${demoDir}/**/*.ts`, {
+    persistent: true,
+    ignoreInitial: true,
+});
+
+watcher.on('change', async (filePath) => {
+    const fileName = path.basename(filePath);
+    console.log(`  📝 File changed: ${fileName}`);
+
+    // Extract demo ID from filename
+    const match = fileName.match(/^(\d+)-(.+)-demo\.ts$/);
+    if (match) {
+        const demoId = match[1];
+        io.emit('file-changed', { id: demoId, file: fileName });
+    }
+});
+
+watcher.on('error', (error) => {
+    console.error('  Watcher error:', error);
+});
+
+httpServer.listen(PORT, () => {
     console.log('\n' + '='.repeat(60));
     console.log('  🚀 TypeScript Practice Viewer');
     console.log('='.repeat(60));
     console.log(`  → Local:   http://localhost:${PORT}`);
     console.log(`  → Network: http://127.0.0.1:${PORT}`);
+    console.log(`  → WebSocket: enabled`);
     console.log('='.repeat(60) + '\n');
     console.log('  Press Ctrl+C to stop\n');
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('\n\n  👋 Shutting down gracefully...');
+    watcher.close();
+    httpServer.close(() => {
+        console.log('  ✓ Server closed\n');
+        process.exit(0);
+    });
 });
