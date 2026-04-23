@@ -17,20 +17,61 @@ An interactive TypeScript learning environment with a live web viewer. Run TypeS
 - **♿ Accessible**: Full keyboard navigation with ARIA labels
 - **🔧 Resizable Panels**: Drag the divider to adjust code/output panel sizes
 - **🚀 Zero Configuration**: Just add a TypeScript file and start coding
-- **📚 Comprehensive Examples**: 10 demo files covering TypeScript fundamentals to advanced concepts
+- **📚 Comprehensive Examples**: 29 demo files covering TypeScript fundamentals to advanced concepts, including interactive DOM demos and hands-on exercises
 
 ## 📚 Included Demos
 
-1. **Syntax** - Basic types, arrays, tuples, union types
-2. **Functions** - Function types, optional parameters, rest parameters, overloads
-3. **Interfaces** - Object types, extending interfaces, optional properties
-4. **Classes** - Inheritance, access modifiers, abstract classes
-5. **Generics** - Generic functions, constraints, multiple type parameters
-6. **Type Guards** - Type narrowing, user-defined type guards, discriminated unions
-7. **Enums** - Numeric, string, and const enums
-8. **Advanced Types** - Intersection types, mapped types, conditional types
-9. **Async** - Promises, async/await, error handling
-10. **Utility Types** - Partial, Required, Pick, Omit, Record, and more
+### Basic Syntax (01a-d)
+
+1. **Basic Types** - Primitives, arrays, tuples
+2. **Unions & Aliases** - Union types, type aliases, literal types
+3. **Template Literals** - String interpolation, template literal types
+4. **Control Flow** - Loops, conditionals, operators
+
+### Functions (02a-c)
+
+5. **Functions Basics** - Declarations, arrow functions, parameters
+6. **Function Types** - Type annotations, overloads, union returns
+7. **Higher-Order Functions** - HOFs, callbacks, composition
+
+### Interfaces (03)
+
+8. **Interfaces** - Object types, extending interfaces, optional properties
+
+### Classes (04a-c)
+
+9. **Classes Basics** - Constructors, methods, properties
+10. **Class Modifiers** - Access modifiers, getters/setters, static members
+11. **Inheritance** - Extends, abstract classes, interfaces
+
+### Advanced TypeScript (05-10)
+
+12. **Generics** - Generic functions, constraints, classes
+13. **Type Guards** - Type narrowing, discriminated unions
+14. **Enums** - Numeric, string, and const enums
+15. **Advanced Types** - Intersection, mapped, conditional types
+16. **Async** - Promises, async/await, error handling
+17. **Utility Types** - Partial, Pick, Omit, Record, and more
+
+### Interactive DOM Demos 🎨 (11a-d)
+
+18. **DOM Basics** - Element selection, manipulation, events
+19. **Form Validation** - Type-safe forms with validation
+20. **Todo App** - Complete CRUD application
+21. **Canvas Animation** - Visual programming with HTML5 Canvas
+
+> **Note:** DOM demos (marked with 🎨) require browser execution. When run from the console, they display instructions for viewing them interactively. Use the "Edit" button in the web viewer and click "Run Modified" to execute them in the browser.
+
+### Type System (12)
+
+22. **Type Debugging** - Understanding inference, satisfies, predicates
+
+### Practice Exercises (13a-d)
+
+23. **Functions Exercise** + Solution
+24. **Classes Exercise** + Solution
+25. **Generics Exercise** + Solution
+26. **Async Exercise** + Solution
 
 ## 🚀 Getting Started
 

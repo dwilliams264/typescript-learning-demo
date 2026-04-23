@@ -8,20 +8,20 @@ function processValue(value: string | number): string {
 }
 
 // instanceof Type Guards
-class Dog {
+class GuardDog {
     bark(): string {
         return 'Woof!';
     }
 }
 
-class Cat {
+class GuardCat {
     meow(): string {
         return 'Meow!';
     }
 }
 
-function makeSound(animal: Dog | Cat): string {
-    if (animal instanceof Dog) {
+function makeSound(animal: GuardDog | GuardCat): string {
+    if (animal instanceof GuardDog) {
         return animal.bark();
     } else {
         return animal.meow();
@@ -48,21 +48,21 @@ function operateVehicle(vehicle: Car | Boat): string {
 }
 
 // Custom Type Guards (User-Defined)
-interface Fish {
+interface GuardFish {
     swim: () => void;
     fins: number;
 }
 
-interface Bird {
+interface GuardBird {
     fly: () => void;
     wings: number;
 }
 
-function isFish(pet: Fish | Bird): pet is Fish {
-    return (pet as Fish).swim !== undefined;
+function isFish(pet: GuardFish | GuardBird): pet is GuardFish {
+    return (pet as GuardFish).swim !== undefined;
 }
 
-function moveAnimal(animal: Fish | Bird): string {
+function moveAnimal(animal: GuardFish | GuardBird): string {
     if (isFish(animal)) {
         return `Swimming with ${animal.fins} fins`;
     } else {
@@ -71,25 +71,25 @@ function moveAnimal(animal: Fish | Bird): string {
 }
 
 // Discriminated Unions
-interface Square {
+interface GuardSquare {
     kind: 'square';
     size: number;
 }
 
-interface Rectangle {
+interface GuardRectangle {
     kind: 'rectangle';
     width: number;
     height: number;
 }
 
-interface Circle {
+interface GuardCircle {
     kind: 'circle';
     radius: number;
 }
 
-type Shape = Square | Rectangle | Circle;
+type GuardShape = GuardSquare | GuardRectangle | GuardCircle;
 
-function calculateArea(shape: Shape): number {
+function calculateArea(shape: GuardShape): number {
     switch (shape.kind) {
         case 'square':
             return shape.size * shape.size;
@@ -125,8 +125,8 @@ console.log(processValue(42.6789));
 
 // instanceof Type Guards
 console.log('\n=== instanceof Type Guards ===');
-const dog = new Dog();
-const cat = new Cat();
+const dog = new GuardDog();
+const cat = new GuardCat();
 console.log(makeSound(dog));
 console.log(makeSound(cat));
 
@@ -145,11 +145,11 @@ console.log(operateVehicle(boat));
 
 // Custom Type Guards
 console.log('\n=== Custom Type Guards ===');
-const fish: Fish = {
+const fish: GuardFish = {
     swim: () => console.log('Swimming...'),
     fins: 2,
 };
-const bird: Bird = {
+const bird: GuardBird = {
     fly: () => console.log('Flying...'),
     wings: 2,
 };
@@ -158,9 +158,9 @@ console.log(moveAnimal(bird));
 
 // Discriminated Unions
 console.log('\n=== Discriminated Unions ===');
-const square: Square = { kind: 'square', size: 5 };
-const rectangle: Rectangle = { kind: 'rectangle', width: 4, height: 6 };
-const circle: Circle = { kind: 'circle', radius: 3 };
+const square: GuardSquare = { kind: 'square', size: 5 };
+const rectangle: GuardRectangle = { kind: 'rectangle', width: 4, height: 6 };
+const circle: GuardCircle = { kind: 'circle', radius: 3 };
 
 console.log(`Square area: ${calculateArea(square)}`);
 console.log(`Rectangle area: ${calculateArea(rectangle)}`);

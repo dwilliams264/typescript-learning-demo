@@ -85,16 +85,16 @@ function logCalculation(...params: CalculateParams): void {
 }
 
 // InstanceType<T> - Obtains the instance type of a constructor function
-class User {
+class UtilUser {
     constructor(
         public name: string,
         public email: string,
     ) {}
 }
 
-type UserInstance = InstanceType<typeof User>;
+type UtilUserInstance = InstanceType<typeof UtilUser>;
 
-function greetUser(user: UserInstance): string {
+function greetUser(user: UtilUserInstance): string {
     return `Hello, ${user.name}!`;
 }
 
@@ -184,7 +184,7 @@ logCalculation(19.99, 5);
 
 // InstanceType<T>
 console.log('\n=== InstanceType<T> ===');
-const user = new User('Alice', 'alice@example.com');
+const user = new UtilUser('Alice', 'alice@example.com');
 console.log(greetUser(user));
 
 // Awaited<T>

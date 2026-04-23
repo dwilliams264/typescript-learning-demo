@@ -1,5 +1,5 @@
 // Basic Interfaces
-interface User {
+interface InterfaceUser {
     id: number;
     name: string;
     email: string;
@@ -50,20 +50,20 @@ interface Calculator {
 }
 
 // Extending Interfaces
-interface Person {
+interface InterfacePerson {
     name: string;
     age: number;
 }
 
-interface Employee extends Person {
+interface InterfaceEmployee extends InterfacePerson {
     employeeId: number;
     department: string;
     salary: number;
 }
 
-interface Manager extends Employee {
+interface InterfaceManager extends InterfaceEmployee {
     teamSize: number;
-    reports: Employee[];
+    reports: InterfaceEmployee[];
 }
 
 // Multiple Interface Extension
@@ -116,12 +116,12 @@ function createCounter(): Counter {
 }
 
 // Interface vs Type Alias
-type Point = {
+type InterfacePoint = {
     x: number;
     y: number;
 };
 
-interface Point3D extends Point {
+interface Point3D extends InterfacePoint {
     z: number;
 }
 
@@ -139,12 +139,12 @@ function printBookInfo(book: Book): void {
     console.log(`${book.pages} pages - Available: ${book.available ? 'Yes' : 'No'}`);
 }
 
-function printUserInfo(user: User): void {
+function printUserInfo(user: InterfaceUser): void {
     console.log(`User #${user.id}: ${user.name}`);
     console.log(`Email: ${user.email}, Active: ${user.isActive}`);
 }
 
-function printEmployeeInfo(employee: Employee): void {
+function printEmployeeInfo(employee: InterfaceEmployee): void {
     console.log(`${employee.name} (ID: ${employee.employeeId})`);
     console.log(`${employee.department} - Salary: £${employee.salary.toLocaleString()}`);
 }
@@ -157,7 +157,7 @@ function printMedia(media: { title: string; yearReleased?: number }): void {
 
 // Basic Interfaces
 console.log('=== Basic Interfaces ===');
-const user: User = {
+const user: InterfaceUser = {
     id: 1,
     name: 'Alice',
     email: 'alice@example.com',
@@ -224,13 +224,13 @@ console.log(`10 ÷ 5 = ${calculator.divide(10, 5)}`);
 
 // Extending Interfaces
 console.log('\n=== Extending Interfaces ===');
-const person: Person = {
+const person: InterfacePerson = {
     name: 'Bob',
     age: 30,
 };
 console.log(`Person: ${person.name}, Age: ${person.age}`);
 
-const employee: Employee = {
+const employee: InterfaceEmployee = {
     name: 'Charlie',
     age: 28,
     employeeId: 1001,
@@ -239,7 +239,7 @@ const employee: Employee = {
 };
 printEmployeeInfo(employee);
 
-const manager: Manager = {
+const manager: InterfaceManager = {
     name: 'Diana',
     age: 35,
     employeeId: 2001,

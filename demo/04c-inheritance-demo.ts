@@ -1,87 +1,13 @@
-// Basic Class
-class ClassPerson {
-    name: string;
-    age: number;
-
-    constructor(name: string, age: number) {
-        this.name = name;
-        this.age = age;
-    }
-
-    greet(): string {
-        return `Hello, I'm ${this.name} and I'm ${this.age} years old`;
-    }
-}
-
-// Access Modifiers
-class BankAccount {
-    public accountNumber: string;
-    private balance: number;
-    protected accountType: string;
-
-    constructor(accountNumber: string, initialBalance: number, accountType: string) {
-        this.accountNumber = accountNumber;
-        this.balance = initialBalance;
-        this.accountType = accountType;
-    }
-
-    public deposit(amount: number): void {
-        this.balance += amount;
-        console.log(`Deposited £${amount}. New balance: £${this.balance}`);
-    }
-
-    public withdraw(amount: number): boolean {
-        if (amount > this.balance) {
-            console.log('Insufficient funds');
-            return false;
-        }
-        this.balance -= amount;
-        console.log(`Withdrew £${amount}. Remaining balance: £${this.balance}`);
-        return true;
-    }
-
-    public getBalance(): number {
-        return this.balance;
-    }
-}
-
-// Getters and Setters
-class Video {
-    private _producer: string = '';
-    static medium: string = 'Audio/Visual';
-    static count: number = 0;
-
-    get producer(): string {
-        return this._producer.toUpperCase();
-    }
-
-    set producer(newProducer: string) {
-        if (newProducer.length > 0) {
-            this._producer = newProducer;
-        }
-    }
-
-    get duration(): string {
-        return this.length ? `${this.length} minutes` : 'Unknown';
-    }
-
-    constructor(
-        public title: string,
-        private year: number,
-        public length?: number,
-    ) {
-        Video.count++;
-    }
-
-    printItem(): void {
-        console.log(`${this.title} was published in ${this.year}`);
-        console.log(`Medium: ${Video.medium}`);
-    }
-
-    static getTotalVideos(): number {
-        return Video.count;
-    }
-}
+/**
+ * Inheritance Demo
+ *
+ * What you'll learn:
+ * - Extending classes with 'extends'
+ * - Method overriding
+ * - Abstract classes and methods
+ * - Implementing interfaces
+ * - Method chaining
+ */
 
 // Inheritance
 class ClassAnimal {
@@ -182,24 +108,6 @@ class ClassCircle extends ClassShape {
     }
 }
 
-// Static Members
-class MathHelper {
-    static readonly PI: number = 3.14159;
-    static readonly E: number = 2.71828;
-
-    static square(n: number): number {
-        return n * n;
-    }
-
-    static cube(n: number): number {
-        return n * n * n;
-    }
-
-    static calculateCircleArea(radius: number): number {
-        return MathHelper.PI * radius * radius;
-    }
-}
-
 // Implementing Interfaces
 interface Drivable {
     speed: number;
@@ -266,32 +174,8 @@ class QueryBuilder {
     }
 }
 
-// Basic Class
-console.log('=== Basic Class ===');
-const person = new ClassPerson('Alice', 30);
-console.log(person.greet());
-
-// Access Modifiers
-console.log('\n=== Access Modifiers ===');
-const account = new BankAccount('ACC001', 1000, 'Savings');
-console.log(`Account: ${account.accountNumber}`);
-account.deposit(500);
-account.withdraw(200);
-console.log(`Current balance: £${account.getBalance()}`);
-
-// Getters and Setters
-console.log('\n=== Getters and Setters ===');
-const video = new Video('Inception', 2010, 148);
-video.printItem();
-video.producer = 'Sci-Fi Pictures';
-console.log(`Producer: ${video.producer}`);
-console.log(`Duration: ${video.duration}`);
-
-const video2 = new Video('The Matrix', 1999, 136);
-console.log(`Total videos created: ${Video.getTotalVideos()}`);
-
 // Inheritance
-console.log('\n=== Inheritance ===');
+console.log('=== Inheritance ===');
 const dog = new ClassDog('Buddy', 5, 'Labrador');
 console.log(dog.getInfo());
 console.log(dog.makeSound());
@@ -314,14 +198,6 @@ console.log(circle.describe());
 console.log(`Area: ${circle.calculateArea().toFixed(2)}`);
 console.log(`Perimeter: ${circle.calculatePerimeter().toFixed(2)}`);
 
-// Static Members
-console.log('\n=== Static Members ===');
-console.log(`PI: ${MathHelper.PI}`);
-console.log(`E: ${MathHelper.E}`);
-console.log(`Square of 5: ${MathHelper.square(5)}`);
-console.log(`Cube of 3: ${MathHelper.cube(3)}`);
-console.log(`Circle area (r=4): ${MathHelper.calculateCircleArea(4).toFixed(2)}`);
-
 // Implementing Interfaces
 console.log('\n=== Implementing Interfaces ===');
 const car = new Car('Tesla', 'Model 3');
@@ -334,3 +210,6 @@ car.stop();
 console.log('\n=== Method Chaining ===');
 const query = new QueryBuilder().select('name, email').from('users').where('age > 18').build();
 console.log(`Query: ${query}`);
+
+const query2 = new QueryBuilder().select('product_name, price').from('products').where('price < 100').build();
+console.log(`Query 2: ${query2}`);

@@ -39,13 +39,20 @@ async function getDemos() {
             .map((file) => {
                 // Extract number and name from filename
                 // e.g., "01-syntax-demo.ts" -> id: "01", name: "Syntax"
-                const match = file.match(/^(\d+)-(.+)-demo\.ts$/);
+                // e.g., "11a-dom-basics-demo.ts" -> id: "11a", name: "🎨 Dom Basics"
+                const match = file.match(/^(\d+[a-z]?)-(.+)-demo\.ts$/);
                 if (match) {
                     const id = match[1];
-                    const name = match[2]
+                    let name = match[2]
                         .split('-')
                         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                         .join(' ');
+
+                    // Add 🎨 prefix for DOM/interactive demos (11-series)
+                    if (id.startsWith('11')) {
+                        name = '🎨 ' + name;
+                    }
+
                     return { id, name, file };
                 }
                 return null;
@@ -77,13 +84,19 @@ app.get('/api/code/:id', async (req, res) => {
             return res.status(404).json({ error: 'Demo not found' });
         }
 
-        const filePath = path.join(__dirname, 'demo', demo.file);
+        // For DOM demos (11a-d), serve .js files for browser execution
+        let fileName = demo.file;
+        if (req.params.id.startsWith('11')) {
+            fileName = demo.file.replace('.ts', '.js');
+        }
+
+        const filePath = path.join(__dirname, 'demo', fileName);
         const sourceCode = await readFile(filePath, 'utf-8');
 
         res.json({
             id: demo.id,
             name: demo.name,
-            file: demo.file,
+            file: fileName,
             code: sourceCode,
         });
     } catch (error: any) {

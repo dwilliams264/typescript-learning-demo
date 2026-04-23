@@ -47,6 +47,68 @@ let originalCode: string = '';
 let monacoReady: Promise<void>;
 let resolveMonacoReady: () => void;
 
+// Helper to check if demo is a DOM demo
+function isDOMDemo(id: string): boolean {
+    return id.startsWith('11');
+}
+
+// Execute code client-side for DOM demos
+function executeClientSide(code: string): { success: boolean; output: string; error?: string } {
+    const output = document.getElementById('output');
+    if (!output) {
+        return { success: false, output: '', error: 'Output element not found' };
+    }
+
+    // Clear output and prepare for DOM rendering
+    output.innerHTML = '';
+
+    // Capture console logs
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = (...args: any[]) => {
+        logs.push(args.map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' '));
+        originalLog.apply(console, args);
+    };
+    console.error = (...args: any[]) => {
+        logs.push('ERROR: ' + args.join(' '));
+        originalError.apply(console, args);
+    };
+    console.warn = (...args: any[]) => {
+        logs.push('WARN: ' + args.join(' '));
+        originalWarn.apply(console, args);
+    };
+
+    try {
+        // Execute the JavaScript code directly (no TypeScript stripping needed - using .js files)
+        const func = new Function(code);
+        func();
+
+        // Restore console
+        console.log = originalLog;
+        console.error = originalError;
+        console.warn = originalWarn;
+
+        return {
+            success: true,
+            output: logs.length > 0 ? logs.join('\n') : 'Demo rendered successfully',
+        };
+    } catch (error) {
+        // Restore console
+        console.log = originalLog;
+        console.error = originalError;
+        console.warn = originalWarn;
+
+        return {
+            success: false,
+            output: logs.join('\n'),
+            error: error instanceof Error ? error.message : String(error),
+        };
+    }
+}
+
 // Initialize monacoReady promise immediately
 monacoReady = new Promise<void>((resolve) => {
     resolveMonacoReady = resolve;
@@ -222,7 +284,41 @@ async function runModifiedCode(): Promise<void> {
     if (output) {
         output.innerHTML = '<div class="placeholder">⏳ Running modified code...</div>';
     }
+    // Check if this is a DOM demo - execute client-side
+    if (currentDemo && isDOMDemo(currentDemo)) {
+        const result = executeClientSide(code);
+        const duration = Date.now() - startTime;
 
+        if (executionTime) {
+            executionTime.textContent = `${duration}ms`;
+        }
+
+        if (result.success) {
+            if (status) {
+                status.textContent = '✓ Success';
+                status.className = 'status success';
+            }
+            // Output is already in DOM
+            if (result.output && result.output !== 'Demo rendered successfully') {
+                const consoleDiv = document.createElement('div');
+                consoleDiv.style.cssText =
+                    'position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: #d4d4d4; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; border-top: 1px solid #3e3e42;';
+                consoleDiv.innerHTML = `<strong>Console:</strong><br><pre style="margin: 5px 0 0 0;">${escapeHtml(result.output)}</pre>`;
+                if (output) output.appendChild(consoleDiv);
+            }
+        } else {
+            if (status) {
+                status.textContent = '✗ Error';
+                status.className = 'status error';
+            }
+            if (output) {
+                output.innerHTML = `<div class="error-output"><strong>Error:</strong>\n${escapeHtml(result.error || 'Unknown error')}</div>`;
+            }
+        }
+        return;
+    }
+
+    // Regular server-side execution for non-DOM demos
     try {
         const response = await fetch('/api/run-code', {
             method: 'POST',
@@ -391,6 +487,57 @@ async function runDemo(id: string, name: string): Promise<void> {
     // Load source code in parallel
     loadDemoCode(id);
 
+    // Check if this is a DOM demo - execute client-side
+    if (isDOMDemo(id)) {
+        try {
+            const codeResponse = await fetch(`/api/code/${id}`);
+            const codeData: CodeResponse = await codeResponse.json();
+
+            const result = executeClientSide(codeData.code);
+            const duration = Date.now() - startTime;
+            lastExecutionTime = duration;
+
+            if (executionTime) {
+                executionTime.textContent = `${duration}ms`;
+            }
+
+            if (result.success) {
+                if (status) {
+                    status.textContent = '✓ Success';
+                    status.className = 'status success';
+                }
+                // Output is already in DOM, just show console logs if any
+                if (result.output && result.output !== 'Demo rendered successfully') {
+                    const consoleDiv = document.createElement('div');
+                    consoleDiv.style.cssText =
+                        'position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: #d4d4d4; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; border-top: 1px solid #3e3e42;';
+                    consoleDiv.innerHTML = `<strong>Console:</strong><br><pre style="margin: 5px 0 0 0;">${escapeHtml(result.output)}</pre>`;
+                    if (output) output.appendChild(consoleDiv);
+                }
+            } else {
+                if (status) {
+                    status.textContent = '✗ Error';
+                    status.className = 'status error';
+                }
+                if (output) {
+                    output.innerHTML = `<div class="error-output"><strong>Error:</strong>\n${escapeHtml(result.error || 'Unknown error')}</div>`;
+                }
+            }
+            return;
+        } catch (error) {
+            if (status) {
+                status.textContent = '✗ Error';
+                status.className = 'status error';
+            }
+            if (output) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                output.innerHTML = `<div class="error-output">Execution error: ${errorMessage}</div>`;
+            }
+            return;
+        }
+    }
+
+    // Regular server-side execution for non-DOM demos
     try {
         const response = await fetch(`/api/run/${id}`);
         const result: RunResult = await response.json();

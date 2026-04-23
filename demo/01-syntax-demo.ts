@@ -34,10 +34,10 @@ function printID(id: ID): void {
 }
 
 // Type Aliases
-type Point = { x: number; y: number };
+type SyntaxPoint = { x: number; y: number };
 type Callback = (message: string) => void;
 
-const origin: Point = { x: 0, y: 0 };
+const syntaxOrigin: SyntaxPoint = { x: 0, y: 0 };
 const logMessage: Callback = (msg) => console.log(`Log: ${msg}`);
 
 // Literal Types
@@ -100,7 +100,7 @@ printID(42);
 
 // Type Aliases
 console.log('\n=== Type Aliases ===');
-console.log(`Origin point: (${origin.x}, ${origin.y})`);
+console.log(`Origin point: (${syntaxOrigin.x}, ${syntaxOrigin.y})`);
 logMessage('Type aliases make code more readable');
 
 // Literal Types

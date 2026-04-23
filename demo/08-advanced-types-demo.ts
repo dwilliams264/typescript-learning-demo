@@ -27,7 +27,7 @@ function handleResult(result: Result): string {
 
 // Type Aliases
 type StringOrNumber = string | number;
-type Point = { x: number; y: number };
+type AdvancedPoint = { x: number; y: number };
 type Callback = (arg: string) => void;
 
 const processInput = (input: StringOrNumber): string => {
@@ -43,14 +43,14 @@ type Optional<T> = {
     [P in keyof T]?: T[P];
 };
 
-interface User {
+interface AdvancedUser {
     id: number;
     name: string;
     email: string;
 }
 
-type ReadonlyUser = Readonly<User>;
-type OptionalUser = Optional<User>;
+type ReadonlyUser = Readonly<AdvancedUser>;
+type OptionalUser = Optional<AdvancedUser>;
 
 // Conditional Types
 type IsString<T> = T extends string ? 'yes' : 'no';
@@ -62,14 +62,14 @@ type NullableString = string | null | undefined;
 type SafeString = NonNullable<NullableString>;
 
 // Index Types
-interface UserRecord {
+interface AdvancedUserRecord {
     id: number;
     name: string;
     email: string;
     age: number;
 }
 
-type UserKeys = keyof UserRecord;
+type AdvancedUserKeys = keyof AdvancedUserRecord;
 
 function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
     return obj[key];
@@ -129,12 +129,12 @@ console.log('\n=== Type Aliases ===');
 console.log(processInput('hello'));
 console.log(processInput(42));
 
-const point: Point = { x: 10, y: 20 };
+const point: AdvancedPoint = { x: 10, y: 20 };
 console.log(`Point: (${point.x}, ${point.y})`);
 
 // Mapped Types
 console.log('\n=== Mapped Types ===');
-const regularUser: User = { id: 1, name: 'Alice', email: 'alice@example.com' };
+const regularUser: AdvancedUser = { id: 1, name: 'Alice', email: 'alice@example.com' };
 const readonlyUser: ReadonlyUser = { id: 2, name: 'Bob', email: 'bob@example.com' };
 const optionalUser: OptionalUser = { name: 'Charlie' };
 
@@ -144,7 +144,7 @@ console.log(`Optional user: ${JSON.stringify(optionalUser)}`);
 
 // Index Types
 console.log('\n=== Index Types ===');
-const user: UserRecord = { id: 1, name: 'David', email: 'david@example.com', age: 30 };
+const user: AdvancedUserRecord = { id: 1, name: 'David', email: 'david@example.com', age: 30 };
 console.log(`Name: ${getProperty(user, 'name')}`);
 console.log(`Age: ${getProperty(user, 'age')}`);
 
