@@ -7,24 +7,7 @@
  * - Type-safe data structures
  * - Event-driven programming
  */
-// Check if running in browser
-if (typeof document === 'undefined') {
-    console.log('=== 🎨 Todo App Demo ===');
-    console.log('');
-    console.log('⚠️  This is an interactive DOM demo that needs to run in the browser.');
-    console.log('');
-    console.log('To view this demo:');
-    console.log('1. Open http://localhost:3000 in your browser');
-    console.log('2. Click "Edit" button in the top-right');
-    console.log('3. Click "Run Modified" to execute in the browser');
-    console.log('');
-    console.log('This demo creates a fully functional todo app with:');
-    console.log('- Add new todos');
-    console.log('- Mark as complete/incomplete');
-    console.log('- Delete todos');
-    console.log('- Live statistics');
-    process.exit(0);
-}
+
 interface Todo {
     id: number;
     text: string;
@@ -229,10 +212,4 @@ if (!outputElement) {
     app.addTodo('Learn TypeScript basics');
     app.addTodo('Build a todo app');
     app.addTodo('Master type safety');
-
-    console.log('=== Todo App Demo ===');
-    console.log('✓ CRUD operations implemented');
-    console.log('✓ Type-safe data structures');
-    console.log('✓ State management');
-    console.log('Try adding, completing, and deleting todos!');
 }

@@ -7,6 +7,7 @@ import { readdir, stat, readFile, writeFile, unlink } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import chokidar from 'chokidar';
+import ts from 'typescript';
 
 const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,19 +28,46 @@ app.use((req, res, next) => {
     next();
 });
 
+// Compile TypeScript to JavaScript for browser execution
+function compileTypeScript(sourceCode: string): string {
+    const result = ts.transpileModule(sourceCode, {
+        compilerOptions: {
+            target: ts.ScriptTarget.ES2022,
+            module: ts.ModuleKind.ES2022,
+            lib: ['ES2022', 'DOM', 'DOM.Iterable'],
+            strict: true,
+            esModuleInterop: true,
+        },
+    });
+    return result.outputText;
+}
+
+// Check if a TypeScript file is a client-side demo
+async function isClientSideDemo(filePath: string): Promise<boolean> {
+    try {
+        const content = await readFile(filePath, 'utf-8');
+        // Check for @browser marker or DOM API usage (method calls, property access)
+        const hasBrowserMarker = /\/\/\s*@browser/i.test(content);
+        const hasDocumentUsage = /\bdocument\.[a-zA-Z]/.test(content) || /\bwindow\.[a-zA-Z]/.test(content);
+        return hasBrowserMarker || hasDocumentUsage;
+    } catch {
+        return false;
+    }
+}
+
 // Dynamically discover demo files
 async function getDemos() {
     try {
         const demoDir = path.join(__dirname, 'demo');
         const files = await readdir(demoDir);
 
-        return files
-            .filter((file) => file.endsWith('-demo.ts'))
-            .sort()
-            .map((file) => {
+        const tsFiles = files.filter((file) => file.endsWith('-demo.ts')).sort();
+
+        const demos = await Promise.all(
+            tsFiles.map(async (file) => {
                 // Extract number and name from filename
                 // e.g., "01-syntax-demo.ts" -> id: "01", name: "Syntax"
-                // e.g., "11a-dom-basics-demo.ts" -> id: "11a", name: "🎨 Dom Basics"
+                // e.g., "11a-dom-basics-demo.ts" -> id: "11a", name: "Dom Basics"
                 const match = file.match(/^(\d+[a-z]?)-(.+)-demo\.ts$/);
                 if (match) {
                     const id = match[1];
@@ -48,16 +76,22 @@ async function getDemos() {
                         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                         .join(' ');
 
-                    // Add 🎨 prefix for DOM/interactive demos (11-series)
-                    if (id.startsWith('11')) {
+                    // Auto-detect client-side demos by checking file content
+                    const filePath = path.join(demoDir, file);
+                    const isClientSide = await isClientSideDemo(filePath);
+
+                    // Add 🎨 prefix for client-side/DOM demos
+                    if (isClientSide) {
                         name = '🎨 ' + name;
                     }
 
-                    return { id, name, file };
+                    return { id, name, file, isClientSide };
                 }
                 return null;
-            })
-            .filter(Boolean);
+            }),
+        );
+
+        return demos.filter(Boolean);
     } catch (error) {
         console.error('Error reading demo directory:', error);
         return [];
@@ -84,20 +118,19 @@ app.get('/api/code/:id', async (req, res) => {
             return res.status(404).json({ error: 'Demo not found' });
         }
 
-        // For DOM demos (11a-d), serve .js files for browser execution
-        let fileName = demo.file;
-        if (req.params.id.startsWith('11')) {
-            fileName = demo.file.replace('.ts', '.js');
-        }
-
-        const filePath = path.join(__dirname, 'demo', fileName);
+        const filePath = path.join(__dirname, 'demo', demo.file);
         const sourceCode = await readFile(filePath, 'utf-8');
+
+        // For client-side demos, compile TypeScript to JavaScript
+        const code = demo.isClientSide ? compileTypeScript(sourceCode) : sourceCode;
+        const fileName = demo.isClientSide ? demo.file.replace('.ts', '.js') : demo.file;
 
         res.json({
             id: demo.id,
             name: demo.name,
             file: fileName,
-            code: sourceCode,
+            code: code,
+            isClientSide: demo.isClientSide,
         });
     } catch (error: any) {
         console.error(`Error reading demo source:`, error.message);

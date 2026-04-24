@@ -301,9 +301,34 @@ async function runModifiedCode(): Promise<void> {
             // Output is already in DOM
             if (result.output && result.output !== 'Demo rendered successfully') {
                 const consoleDiv = document.createElement('div');
-                consoleDiv.style.cssText =
-                    'position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: #d4d4d4; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; border-top: 1px solid #3e3e42;';
-                consoleDiv.innerHTML = `<strong>Console:</strong><br><pre style="margin: 5px 0 0 0;">${escapeHtml(result.output)}</pre>`;
+                consoleDiv.className = 'console-output';
+
+                const logs = result.output.split('\n');
+                const logEntries = logs
+                    .map((log) => {
+                        let className = 'console-log-entry';
+                        let content = log;
+
+                        if (log.startsWith('ERROR:')) {
+                            className += ' error';
+                            content = log.substring(6).trim();
+                        } else if (log.startsWith('WARN:')) {
+                            className += ' warn';
+                            content = log.substring(5).trim();
+                        }
+
+                        return `<div class="${className}">${escapeHtml(content)}</div>`;
+                    })
+                    .join('');
+
+                consoleDiv.innerHTML = `
+                    <div class="console-header">
+                        <span class="console-header-icon">▶</span>
+                        <span>Console</span>
+                    </div>
+                    <div class="console-logs">${logEntries}</div>
+                `;
+
                 if (output) output.appendChild(consoleDiv);
             }
         } else {
@@ -509,9 +534,34 @@ async function runDemo(id: string, name: string): Promise<void> {
                 // Output is already in DOM, just show console logs if any
                 if (result.output && result.output !== 'Demo rendered successfully') {
                     const consoleDiv = document.createElement('div');
-                    consoleDiv.style.cssText =
-                        'position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: #d4d4d4; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; border-top: 1px solid #3e3e42;';
-                    consoleDiv.innerHTML = `<strong>Console:</strong><br><pre style="margin: 5px 0 0 0;">${escapeHtml(result.output)}</pre>`;
+                    consoleDiv.className = 'console-output';
+
+                    const logs = result.output.split('\n');
+                    const logEntries = logs
+                        .map((log) => {
+                            let className = 'console-log-entry';
+                            let content = log;
+
+                            if (log.startsWith('ERROR:')) {
+                                className += ' error';
+                                content = log.substring(6).trim();
+                            } else if (log.startsWith('WARN:')) {
+                                className += ' warn';
+                                content = log.substring(5).trim();
+                            }
+
+                            return `<div class="${className}">${escapeHtml(content)}</div>`;
+                        })
+                        .join('');
+
+                    consoleDiv.innerHTML = `
+                        <div class="console-header">
+                            <span class="console-header-icon">▶</span>
+                            <span>Console</span>
+                        </div>
+                        <div class="console-logs">${logEntries}</div>
+                    `;
+
                     if (output) output.appendChild(consoleDiv);
                 }
             } else {

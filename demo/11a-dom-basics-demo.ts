@@ -8,21 +8,6 @@
  * - Creating and appending elements
  */
 
-// Check if running in browser
-if (typeof document === 'undefined') {
-    console.log('=== 🎨 DOM Basics Demo ===');
-    console.log('');
-    console.log('⚠️  This is an interactive DOM demo that needs to run in the browser.');
-    console.log('');
-    console.log('To view this demo:');
-    console.log('1. Open http://localhost:3000 in your browser');
-    console.log('2. Click "Edit" button in the top-right');
-    console.log('3. Click "Run Modified" to execute in the browser');
-    console.log('');
-    console.log('This demo creates interactive buttons, inputs, and hover effects!');
-    process.exit(0);
-}
-
 // Type-safe element selection
 const outputElement = document.getElementById('output') as HTMLDivElement;
 
@@ -139,10 +124,4 @@ if (!outputElement) {
 
     // Append to output
     outputElement.appendChild(container);
-
-    console.log('=== DOM Basics Demo ===');
-    console.log('✓ Created interactive elements');
-    console.log('✓ Added event listeners');
-    console.log('✓ Manipulated styles dynamically');
-    console.log('Try interacting with the elements above!');
 }

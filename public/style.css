@@ -289,6 +289,61 @@ h1 {
     border-left: 3px solid #f48771;
 }
 
+/* Console Output */
+.console-output {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a1a1a;
+    border-top: 1px solid #3e3e42;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.console-header {
+    padding: 8px 12px;
+    background: #252526;
+    border-bottom: 1px solid #3e3e42;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #858585;
+}
+
+.console-header-icon {
+    font-size: 14px;
+}
+
+.console-logs {
+    padding: 8px 12px;
+    color: #d4d4d4;
+}
+
+.console-log-entry {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.console-log-entry:last-child {
+    border-bottom: none;
+}
+
+.console-log-entry.error {
+    color: #f48771;
+}
+
+.console-log-entry.warn {
+    color: #dcdcaa;
+}
+
 /* Buttons */
 .run-button {
     padding: 8px 16px;

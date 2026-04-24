@@ -7,24 +7,7 @@
  * - Animation loops
  * - Drawing shapes and gradients
  */
-// Check if running in browser
-if (typeof document === 'undefined') {
-    console.log('=== 🎨 Canvas Animation Demo ===');
-    console.log('');
-    console.log('⚠️  This is an interactive DOM demo that needs to run in the browser.');
-    console.log('');
-    console.log('To view this demo:');
-    console.log('1. Open http://localhost:3000 in your browser');
-    console.log('2. Click "Edit" button in the top-right');
-    console.log('3. Click "Run Modified" to execute in the browser');
-    console.log('');
-    console.log('This demo creates an animated canvas with:');
-    console.log('- Bouncing balls with physics');
-    console.log('- Gradient backgrounds');
-    console.log('- Collision detection');
-    console.log('- Start/Stop/Reset controls');
-    process.exit(0);
-}
+
 interface Point {
     x: number;
     y: number;
@@ -246,11 +229,4 @@ if (!outputElement) {
         app = new CanvasApp(canvas);
         app.start();
     });
-
-    console.log('=== Canvas Animation Demo ===');
-    console.log('✓ Canvas API with TypeScript');
-    console.log('✓ Animation loop with requestAnimationFrame');
-    console.log('✓ Physics simulation (collision detection)');
-    console.log('✓ Gradients and styling');
-    console.log('Use the buttons to control the animation!');
 }

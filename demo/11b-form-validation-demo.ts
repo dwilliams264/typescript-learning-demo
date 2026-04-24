@@ -7,26 +7,7 @@
  * - Form submission handling
  * - Error message display
  */
-// Check if running in browser
-if (typeof document === 'undefined') {
-    console.log('=== 🎨 Form Validation Demo ===');
-    console.log('');
-    console.log('⚠️  This is an interactive DOM demo that needs to run in the browser.');
-    console.log('');
-    console.log('To view this demo:');
-    console.log('1. Open http://localhost:3000 in your browser');
-    console.log('2. Click "Edit" button in the top-right');
-    console.log('3. Click "Run Modified" to execute in the browser');
-    console.log('');
-    console.log('This demo creates a working form with type-safe validation!');
-    console.log('');
-    console.log('Validation rules:');
-    console.log('- Name: 2-50 characters');
-    console.log('- Email: Valid email format');
-    console.log('- Age: 18-120');
-    console.log('- Country: Required selection');
-    process.exit(0);
-}
+
 interface FormData {
     name: string;
     email: string;
@@ -243,12 +224,4 @@ if (!outputElement) {
 
     container.appendChild(form);
     outputElement.appendChild(container);
-
-    console.log('=== Form Validation Demo ===');
-    console.log('Try submitting the form with different values!');
-    console.log('Validation rules:');
-    console.log('- Name: 2-50 characters');
-    console.log('- Email: Valid email format');
-    console.log('- Age: 18-120');
-    console.log('- Country: Required');
 }
