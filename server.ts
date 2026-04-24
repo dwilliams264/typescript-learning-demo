@@ -236,6 +236,83 @@ app.post('/api/run-code', express.json({ limit: '1mb' }), async (req, res) => {
     }
 });
 
+// Run playground code (multi-file support)
+app.post('/api/run-playground', express.json({ limit: '2mb' }), async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+        const { files, entryPoint } = req.body;
+
+        if (!files || !Array.isArray(files) || files.length === 0) {
+            return res.status(400).json({ error: 'No files provided' });
+        }
+
+        if (!entryPoint) {
+            return res.status(400).json({ error: 'No entry point specified' });
+        }
+
+        console.log(`  → Running playground with ${files.length} file(s), entry: ${entryPoint}`);
+
+        // Create temporary directory for playground files
+        const tempDir = path.join(__dirname, '.tmp-playground');
+        const fs = await import('fs');
+        if (!fs.existsSync(tempDir)) {
+            await fs.promises.mkdir(tempDir, { recursive: true });
+        }
+
+        try {
+            // Write all files to temp directory
+            await Promise.all(
+                files.map(async (file: { filename: string; content: string }) => {
+                    const filePath = path.join(tempDir, file.filename);
+                    await writeFile(filePath, file.content, 'utf-8');
+                }),
+            );
+
+            // Execute entry point file
+            const entryFilePath = path.join(tempDir, entryPoint);
+            const { stdout, stderr } = await execAsync(`tsx ${entryFilePath}`, {
+                cwd: tempDir,
+                timeout: 10000,
+            });
+
+            const duration = Date.now() - startTime;
+            console.log(`  ✓ Completed in ${duration}ms`);
+
+            // Clean up temp directory
+            await fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+
+            res.json({
+                success: true,
+                output: stdout,
+                error: stderr || null,
+            });
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            console.error(`  ✗ Failed after ${duration}ms:`, error.message);
+
+            // Clean up temp directory
+            const fs = await import('fs');
+            await fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+
+            res.json({
+                success: false,
+                output: error.stdout || '',
+                error: error.stderr || error.message,
+            });
+        }
+    } catch (error: any) {
+        const duration = Date.now() - startTime;
+        console.error(`  ✗ Failed after ${duration}ms:`, error.message);
+
+        res.status(500).json({
+            success: false,
+            output: '',
+            error: error.message,
+        });
+    }
+});
+
 // Get file modification time for live reload
 app.get('/api/mtime/:id', async (req, res) => {
     try {

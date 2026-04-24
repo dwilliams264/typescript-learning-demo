@@ -24,13 +24,45 @@
                     autocomplete="off"
                 />
             </div>
-            <ul class="demo-list" id="demoList"></ul>
+
+            <!-- Playground Section -->
+            <div class="playground-section">
+                <div class="section-header">
+                    <button class="playground-home-btn" onclick="loadPlayground()" title="Go to Playground">
+                        <span>🎮</span>
+                        <span>Playground</span>
+                    </button>
+                </div>
+                <div class="playground-file-controls">
+                    <button class="new-file-btn" onclick="createPlaygroundFile()" title="Create new file (Ctrl/Cmd+N)">
+                        <span>➕</span>
+                        <span>New File</span>
+                    </button>
+                </div>
+                <div class="playground-files" id="playgroundFiles"></div>
+            </div>
+
+            <!-- Demos Section -->
+            <div class="demos-section">
+                <div class="section-header">
+                    <span>📚 Demo Files</span>
+                </div>
+                <ul class="demo-list" id="demoList"></ul>
+            </div>
         </div>
 
         <div class="content">
             <div class="output-header">
                 <div class="output-title" id="outputTitle">Select a demo to run</div>
                 <div class="header-actions hidden" id="headerActions">
+                    <button
+                        class="execution-mode-toggle"
+                        id="executionModeToggle"
+                        onclick="toggleExecutionMode()"
+                        title="Toggle execution mode"
+                    >
+                        🌐 Client-side
+                    </button>
                     <button
                         class="live-reload-button active"
                         id="liveReloadBtn"

@@ -743,3 +743,165 @@ kbd {
         padding: 12px;
     }
 }
+
+/* Playground Styles */
+.playground-section {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #3e3e42;
+}
+
+.demos-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.section-header {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #858585;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.playground-home-btn {
+    background: transparent;
+    border: none;
+    color: #4a9eff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    width: 100%;
+    text-align: left;
+}
+
+.playground-home-btn:hover {
+    background: #37373d;
+}
+
+.playground-home-btn span:first-child {
+    font-size: 16px;
+}
+
+.playground-file-controls {
+    margin-bottom: 12px;
+}
+
+.new-file-btn {
+    background: #2d2d30;
+    border: 1px solid #3e3e42;
+    color: #d4d4d4;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.new-file-btn:hover {
+    background: #37373d;
+    border-color: #007acc;
+}
+
+.playground-files {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.playground-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #2d2d30;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+    position: relative;
+}
+
+.playground-file:hover {
+    background: #37373d;
+}
+
+.playground-file.active {
+    background: #0e639c;
+    border-color: #007acc;
+}
+
+.file-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.file-name {
+    flex: 1;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.delete-file-btn {
+    background: transparent;
+    border: none;
+    color: #858585;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    opacity: 0;
+    margin-left: auto;
+}
+
+.playground-file:hover .delete-file-btn {
+    opacity: 1;
+}
+
+.delete-file-btn:hover {
+    color: #f48771;
+}
+
+.execution-mode-toggle {
+    background: #2d2d30;
+    border: 1px solid #3e3e42;
+    color: #d4d4d4;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.execution-mode-toggle:hover {
+    background: #37373d;
+    border-color: #007acc;
+}

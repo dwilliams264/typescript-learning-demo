@@ -35,6 +35,23 @@ interface CodeResponse {
     code: string;
 }
 
+// Playground interfaces
+interface PlaygroundFile {
+    name: string;
+    content: string;
+}
+
+interface PlaygroundWorkspace {
+    files: PlaygroundFile[];
+    activeFile: string;
+    executionMode: 'client' | 'server';
+}
+
+// Playground state
+let isPlaygroundMode: boolean = false;
+let playgroundWorkspace: PlaygroundWorkspace | null = null;
+let currentPlaygroundFile: string = 'main.ts';
+
 let currentDemo: string | null = null;
 let demos: Demo[] = [];
 let liveReloadEnabled: boolean = true;
@@ -47,9 +64,462 @@ let originalCode: string = '';
 let monacoReady: Promise<void>;
 let resolveMonacoReady: () => void;
 
+// Playground localStorage functions
+const PLAYGROUND_STORAGE_KEY = 'typescript-playground-workspace';
+
+function getDefaultPlaygroundWorkspace(): PlaygroundWorkspace {
+    return {
+        files: [
+            {
+                name: 'main.ts',
+                content: `// 🎮 TypeScript Playground
+// Welcome! This is your personal scratch space for practicing TypeScript.
+//
+// Features:
+// - Create multiple .ts files and import between them
+// - Toggle between client-side (browser/DOM) and server-side (Node.js) execution
+// - Your code auto-saves to your browser
+// - Demo files are available in the sidebar as reference
+//
+// Example: Create a new file called "utils.ts" with:
+// export const greet = (name: string) => \`Hello, \${name}!\`;
+//
+// Then import it here:
+// import { greet } from './utils';
+// console.log(greet('World'));
+//
+// Get started by writing some TypeScript below! 👇
+
+console.log('Welcome to the TypeScript Playground! 🚀');
+
+// Your code here...
+`,
+            },
+        ],
+        activeFile: 'main.ts',
+        executionMode: 'server',
+    };
+}
+
+function savePlaygroundToLocalStorage(workspace: PlaygroundWorkspace): void {
+    try {
+        localStorage.setItem(PLAYGROUND_STORAGE_KEY, JSON.stringify(workspace));
+    } catch (error) {
+        console.error('Failed to save playground to localStorage:', error);
+    }
+}
+
+function loadPlaygroundFromLocalStorage(): PlaygroundWorkspace {
+    try {
+        const stored = localStorage.getItem(PLAYGROUND_STORAGE_KEY);
+        if (stored) {
+            const workspace = JSON.parse(stored) as PlaygroundWorkspace;
+            // Validate workspace has at least one file
+            if (workspace.files && workspace.files.length > 0) {
+                return workspace;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load playground from localStorage:', error);
+    }
+    return getDefaultPlaygroundWorkspace();
+}
+
+// Playground file management
+function renderPlaygroundFileTree(): void {
+    const fileTreeContainer = document.getElementById('playgroundFiles');
+    if (!fileTreeContainer || !playgroundWorkspace) return;
+
+    fileTreeContainer.innerHTML = playgroundWorkspace.files
+        .map(
+            (file) => `
+        <div class="playground-file ${file.name === currentPlaygroundFile ? 'active' : ''}" 
+             data-filename="${file.name}"
+             onclick="switchPlaygroundFile('${file.name}')">
+            <span class="file-icon">📄</span>
+            <span class="file-name">${file.name}</span>
+            ${playgroundWorkspace!.files.length > 1 ? `<button class="delete-file-btn" onclick="event.stopPropagation(); deletePlaygroundFile('${file.name}')" title="Delete file">×</button>` : ''}
+        </div>
+    `,
+        )
+        .join('');
+}
+
+function switchPlaygroundFile(filename: string): void {
+    if (!playgroundWorkspace || !monacoEditor || typeof monaco === 'undefined') return;
+
+    // Save current file content before switching
+    const currentFile = playgroundWorkspace.files.find((f) => f.name === currentPlaygroundFile);
+    if (currentFile) {
+        currentFile.content = monacoEditor.getValue();
+    }
+
+    // Switch to new file
+    currentPlaygroundFile = filename;
+    playgroundWorkspace.activeFile = filename;
+
+    const newFile = playgroundWorkspace.files.find((f) => f.name === filename);
+    if (newFile) {
+        // Create or get model for the new file with proper URI
+        const uri = monaco.Uri.parse(`file:///workspace/${filename}`);
+        let model = monaco.editor.getModel(uri);
+
+        if (!model) {
+            model = monaco.editor.createModel(newFile.content, 'typescript', uri);
+        } else {
+            // Update existing model content
+            model.setValue(newFile.content);
+        }
+
+        monacoEditor.setModel(model);
+        originalCode = newFile.content; // Update original code reference
+        updateModifiedBadge(false);
+    }
+
+    renderPlaygroundFileTree();
+    savePlaygroundToLocalStorage(playgroundWorkspace);
+
+    // Update Monaco's understanding of other files
+    updateMonacoExtraLibs();
+}
+
+function updateMonacoExtraLibs(): void {
+    if (!playgroundWorkspace || typeof monaco === 'undefined') return;
+
+    // Create models for all playground files so Monaco can resolve imports between them
+    playgroundWorkspace.files.forEach((file) => {
+        const uri = monaco.Uri.parse(`file:///workspace/${file.name}`);
+        let model = monaco.editor.getModel(uri);
+
+        if (!model) {
+            // Create new model for this file
+            monaco.editor.createModel(file.content, 'typescript', uri);
+        } else if (file.name !== currentPlaygroundFile) {
+            // Update content of non-active files
+            model.setValue(file.content);
+        }
+    });
+}
+
+function createPlaygroundFile(): void {
+    if (!playgroundWorkspace) return;
+
+    const filename = prompt('Enter filename (e.g., utils.ts):');
+    if (!filename) return;
+
+    // Validate filename
+    if (!filename.endsWith('.ts')) {
+        alert('Filename must end with .ts');
+        return;
+    }
+
+    if (!/^[a-zA-Z0-9-_]+\.ts$/.test(filename)) {
+        alert('Filename can only contain letters, numbers, hyphens, and underscores');
+        return;
+    }
+
+    if (playgroundWorkspace.files.some((f) => f.name === filename)) {
+        alert('File already exists');
+        return;
+    }
+
+    // Check file count limit
+    if (playgroundWorkspace.files.length >= 20) {
+        alert('Maximum 20 files allowed in playground');
+        return;
+    }
+
+    // Create new file
+    const newFile: PlaygroundFile = {
+        name: filename,
+        content: `// ${filename}\n\n`,
+    };
+
+    playgroundWorkspace.files.push(newFile);
+    renderPlaygroundFileTree();
+    savePlaygroundToLocalStorage(playgroundWorkspace);
+
+    // Switch to new file
+    switchPlaygroundFile(filename);
+    updateMonacoExtraLibs();
+}
+
+function deletePlaygroundFile(filename: string): void {
+    if (!playgroundWorkspace) return;
+
+    if (playgroundWorkspace.files.length <= 1) {
+        alert('Cannot delete the last file');
+        return;
+    }
+
+    if (!confirm(`Delete ${filename}?`)) {
+        return;
+    }
+
+    playgroundWorkspace.files = playgroundWorkspace.files.filter((f) => f.name !== filename);
+
+    // If deleted file was active, switch to first file
+    if (currentPlaygroundFile === filename) {
+        currentPlaygroundFile = playgroundWorkspace.files[0].name;
+        playgroundWorkspace.activeFile = currentPlaygroundFile;
+
+        if (monacoEditor) {
+            monacoEditor.setValue(playgroundWorkspace.files[0].content);
+            originalCode = playgroundWorkspace.files[0].content;
+            updateModifiedBadge(false);
+        }
+    }
+
+    renderPlaygroundFileTree();
+    savePlaygroundToLocalStorage(playgroundWorkspace);
+    updateMonacoExtraLibs();
+}
+
+function loadPlayground(): void {
+    isPlaygroundMode = true;
+    playgroundWorkspace = loadPlaygroundFromLocalStorage();
+    currentPlaygroundFile = playgroundWorkspace.activeFile;
+
+    // Update UI to show playground mode
+    const outputTitle = document.getElementById('outputTitle');
+    const headerActions = document.getElementById('headerActions');
+    if (outputTitle) outputTitle.textContent = '🎮 Playground';
+    if (headerActions) headerActions.classList.remove('hidden');
+
+    // Clear demo selection
+    document.querySelectorAll('.demo-item').forEach((item) => item.classList.remove('active'));
+    currentDemo = null;
+
+    // Render file tree
+    renderPlaygroundFileTree();
+
+    // Update execution mode toggle
+    updateExecutionModeToggle();
+
+    // Load active file into editor
+    const activeFile = playgroundWorkspace.files.find((f) => f.name === currentPlaygroundFile);
+    if (activeFile) {
+        originalCode = activeFile.content;
+        if (monacoEditor) {
+            monacoEditor.setValue(activeFile.content);
+            updateModifiedBadge(false);
+            updateMonacoExtraLibs();
+        } else {
+            // Wait for Monaco to load
+            monacoReady.then(() => {
+                initializeMonacoWithCode(activeFile.content).then(() => {
+                    updateMonacoExtraLibs();
+                });
+            });
+        }
+    }
+
+    // Update badge
+    updatePlaygroundBadge();
+}
+
+function updatePlaygroundBadge(): void {
+    const badge = document.getElementById('modifiedBadge');
+    if (badge && isPlaygroundMode) {
+        badge.textContent = 'PLAYGROUND';
+        badge.classList.remove('hidden');
+        badge.style.backgroundColor = '#4a9eff';
+    }
+}
+
+function updateExecutionModeToggle(): void {
+    const toggle = document.getElementById('executionModeToggle');
+    if (!toggle || !playgroundWorkspace) return;
+
+    toggle.textContent = playgroundWorkspace.executionMode === 'client' ? '🌐 Client-side' : '🖥️ Server-side';
+    toggle.title = `Execution mode: ${playgroundWorkspace.executionMode === 'client' ? 'Browser/DOM APIs' : 'Node.js APIs'}`;
+}
+
+function toggleExecutionMode(): void {
+    if (!playgroundWorkspace) return;
+
+    playgroundWorkspace.executionMode = playgroundWorkspace.executionMode === 'client' ? 'server' : 'client';
+    updateExecutionModeToggle();
+    savePlaygroundToLocalStorage(playgroundWorkspace);
+}
+
 // Helper to check if demo is a DOM demo
 function isDOMDemo(id: string): boolean {
     return id.startsWith('11');
+}
+
+// Execute multi-file playground code client-side
+function executePlaygroundClientSide(
+    files: PlaygroundFile[],
+    entryPoint: string,
+): { success: boolean; output: string; error?: string } {
+    const output = document.getElementById('output');
+    if (!output) {
+        return { success: false, output: '', error: 'Output element not found' };
+    }
+
+    // Clear output and prepare for DOM rendering
+    output.innerHTML = '';
+
+    // Capture console logs
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = (...args: any[]) => {
+        logs.push(args.map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' '));
+        originalLog.apply(console, args);
+    };
+    console.error = (...args: any[]) => {
+        logs.push('ERROR: ' + args.join(' '));
+        originalError.apply(console, args);
+    };
+    console.warn = (...args: any[]) => {
+        logs.push('WARN: ' + args.join(' '));
+        originalWarn.apply(console, args);
+    };
+
+    try {
+        // Create a simple module system
+        const modules: { [key: string]: any } = {};
+        const moduleCache: { [key: string]: any } = {};
+
+        // Process imports/exports for each file
+        files.forEach((file) => {
+            let processedCode = file.content;
+
+            // Remove single-line comments to avoid breaking regex
+            processedCode = processedCode.replace(/\/\/.*$/gm, '');
+
+            // Convert export statements to module.exports
+            processedCode = processedCode.replace(/export\s+const\s+(\w+)\s*=\s*([^;]+);?/g, (_, name, value) => {
+                return `const ${name} = ${value}; __exports.${name} = ${name};`;
+            });
+            processedCode = processedCode.replace(/export\s+function\s+(\w+)/g, (match, name) => {
+                return `function ${name}`;
+            });
+            processedCode = processedCode.replace(/export\s+class\s+(\w+)/g, (match, name) => {
+                return `class ${name}`;
+            });
+
+            // Store for later export registration
+            processedCode = processedCode.replace(/export\s*{([^}]+)}/g, (_, names) => {
+                const exportNames = names.split(',').map((n: string) => n.trim());
+                return exportNames.map((name: string) => `__exports.${name} = ${name};`).join(' ');
+            });
+
+            modules[file.name] = processedCode;
+        });
+
+        // Function to execute a module
+        const executeModule = (moduleName: string): any => {
+            if (moduleCache[moduleName]) {
+                return moduleCache[moduleName];
+            }
+
+            const code = modules[moduleName];
+            if (!code) {
+                throw new Error(`Module not found: ${moduleName}`);
+            }
+
+            const __exports: any = {};
+
+            // Create a require function for this module
+            const require = (importPath: string) => {
+                // Handle relative imports
+                let targetModule = importPath;
+                if (importPath.startsWith('./') || importPath.startsWith('../')) {
+                    targetModule = importPath.replace(/^\.\//, '').replace(/^\.\.\//, '');
+                }
+                // Add .ts extension if not present
+                if (!targetModule.endsWith('.ts')) {
+                    targetModule += '.ts';
+                }
+                return executeModule(targetModule);
+            };
+
+            // Process import statements
+            let processedCode = code;
+            const importRegex = /import\s*{([^}]+)}\s*from\s*['"]([^'"]+)['"]/g;
+            let match;
+            const imports: { names: string[]; from: string }[] = [];
+
+            while ((match = importRegex.exec(processedCode)) !== null) {
+                const names = match[1].split(',').map((n) => n.trim());
+                const from = match[2];
+                imports.push({ names, from });
+            }
+
+            // Remove import statements
+            processedCode = processedCode.replace(importRegex, '');
+
+            // Execute imports first
+            imports.forEach((imp) => {
+                let targetModule = imp.from;
+                if (targetModule.startsWith('./') || targetModule.startsWith('../')) {
+                    targetModule = targetModule.replace(/^\.\//, '').replace(/^\.\.\//, '');
+                }
+                if (!targetModule.endsWith('.ts')) {
+                    targetModule += '.ts';
+                }
+
+                const importedModule = executeModule(targetModule);
+                imp.names.forEach((name) => {
+                    // Make imported values available in scope
+                    processedCode = `const ${name} = __imported_${targetModule.replace(/\./g, '_')}.${name};\n${processedCode}`;
+                });
+            });
+
+            // Create function scope with imported modules available
+            const importedModules: any = {};
+            imports.forEach((imp) => {
+                let targetModule = imp.from;
+                if (targetModule.startsWith('./') || targetModule.startsWith('../')) {
+                    targetModule = targetModule.replace(/^\.\//, '').replace(/^\.\.\//, '');
+                }
+                if (!targetModule.endsWith('.ts')) {
+                    targetModule += '.ts';
+                }
+                importedModules[`__imported_${targetModule.replace(/\./g, '_')}`] = executeModule(targetModule);
+            });
+
+            // Execute the module code
+            const func = new Function(
+                '__exports',
+                ...Object.keys(importedModules),
+                processedCode + '\nreturn __exports;',
+            );
+            const result = func(__exports, ...Object.values(importedModules));
+
+            moduleCache[moduleName] = result;
+            return result;
+        };
+
+        // Execute entry point
+        executeModule(entryPoint);
+
+        // Restore console
+        console.log = originalLog;
+        console.error = originalError;
+        console.warn = originalWarn;
+
+        return {
+            success: true,
+            output: logs.length > 0 ? logs.join('\n') : 'Code executed successfully',
+        };
+    } catch (error) {
+        // Restore console
+        console.log = originalLog;
+        console.error = originalError;
+        console.warn = originalWarn;
+
+        return {
+            success: false,
+            output: logs.join('\n'),
+            error: error instanceof Error ? error.message : String(error),
+        };
+    }
 }
 
 // Execute code client-side for DOM demos
@@ -206,6 +676,19 @@ function initMonacoEditor(): void {
 
     require(['vs/editor/editor.main'], function () {
         console.log('✓ Monaco Editor loaded');
+
+        // Configure TypeScript compiler options for Monaco
+        if (typeof monaco !== 'undefined') {
+            monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+                target: monaco.languages.typescript.ScriptTarget.ES2020,
+                module: monaco.languages.typescript.ModuleKind.ES2015,
+                moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+                allowNonTsExtensions: true,
+                allowSyntheticDefaultImports: true,
+                esModuleInterop: true,
+            });
+        }
+
         resolveMonacoReady();
     });
 }
@@ -223,9 +706,17 @@ async function initializeMonacoWithCode(code: string): Promise<void> {
     // Clear placeholder
     monacoContainer.innerHTML = '';
 
+    // Create model with proper URI for playground files
+    let model;
+    if (isPlaygroundMode && currentPlaygroundFile) {
+        const uri = monaco.Uri.parse(`file:///workspace/${currentPlaygroundFile}`);
+        model = monaco.editor.createModel(code, 'typescript', uri);
+    }
+
     monacoEditor = monaco.editor.create(monacoContainer, {
-        value: code,
-        language: 'typescript',
+        model: model,
+        value: model ? undefined : code,
+        language: model ? undefined : 'typescript',
         theme: 'vs-dark',
         minimap: { enabled: false },
         fontSize: 13,
@@ -258,10 +749,18 @@ async function initializeMonacoWithCode(code: string): Promise<void> {
 function updateModifiedBadge(isModified: boolean): void {
     const badge = document.getElementById('modifiedBadge');
     if (badge) {
-        if (isModified) {
+        // In playground mode, always show PLAYGROUND badge
+        if (isPlaygroundMode) {
+            badge.textContent = 'PLAYGROUND';
             badge.classList.remove('hidden');
+            badge.style.backgroundColor = '#4a9eff';
+        } else if (isModified) {
+            badge.textContent = 'Modified';
+            badge.classList.remove('hidden');
+            badge.style.backgroundColor = '';
         } else {
             badge.classList.add('hidden');
+            badge.style.backgroundColor = '';
         }
     }
 }
@@ -269,6 +768,15 @@ function updateModifiedBadge(isModified: boolean): void {
 // Run modified code
 async function runModifiedCode(): Promise<void> {
     if (!monacoEditor) return;
+
+    // Save current playground file content if in playground mode
+    if (isPlaygroundMode && playgroundWorkspace) {
+        const currentFile = playgroundWorkspace.files.find((f) => f.name === currentPlaygroundFile);
+        if (currentFile) {
+            currentFile.content = monacoEditor.getValue();
+            savePlaygroundToLocalStorage(playgroundWorkspace);
+        }
+    }
 
     const code = monacoEditor.getValue();
     const startTime = Date.now();
@@ -284,6 +792,137 @@ async function runModifiedCode(): Promise<void> {
     if (output) {
         output.innerHTML = '<div class="placeholder">⏳ Running modified code...</div>';
     }
+
+    // Handle playground mode execution
+    if (isPlaygroundMode && playgroundWorkspace) {
+        if (playgroundWorkspace.executionMode === 'client') {
+            // Update current file content before execution
+            const updatedFiles = playgroundWorkspace.files.map((f) =>
+                f.name === currentPlaygroundFile ? { ...f, content: code } : f,
+            );
+
+            // Client-side multi-file execution
+            const result = executePlaygroundClientSide(updatedFiles, currentPlaygroundFile);
+            const duration = Date.now() - startTime;
+
+            if (executionTime) {
+                executionTime.textContent = `${duration}ms`;
+            }
+
+            if (result.success) {
+                if (status) {
+                    status.textContent = '✓ Success';
+                    status.className = 'status success';
+                }
+                if (result.output && result.output !== 'Code executed successfully') {
+                    const consoleDiv = document.createElement('div');
+                    consoleDiv.className = 'console-output';
+
+                    const logs = result.output.split('\n');
+                    const logEntries = logs
+                        .map((log) => {
+                            let className = 'console-log-entry';
+                            let content = log;
+
+                            if (log.startsWith('ERROR:')) {
+                                className += ' error';
+                                content = log.substring(6).trim();
+                            } else if (log.startsWith('WARN:')) {
+                                className += ' warn';
+                                content = log.substring(5).trim();
+                            }
+
+                            return `<div class="${className}">${escapeHtml(content)}</div>`;
+                        })
+                        .join('');
+
+                    consoleDiv.innerHTML = `
+                        <div class="console-header">
+                            <span class="console-header-icon">▶</span>
+                            <span>Console</span>
+                        </div>
+                        <div class="console-logs">${logEntries}</div>
+                    `;
+
+                    if (output) output.appendChild(consoleDiv);
+                }
+            } else {
+                if (status) {
+                    status.textContent = '✗ Error';
+                    status.className = 'status error';
+                }
+                if (output) {
+                    output.innerHTML = `<div class="error-output"><strong>Error:</strong>\n${escapeHtml(result.error || 'Unknown error')}</div>`;
+                }
+            }
+            return;
+        } else {
+            // Server-side execution for playground
+            try {
+                const response = await fetch('/api/run-playground', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        files: playgroundWorkspace.files.map((f) => ({
+                            filename: f.name,
+                            content: f.name === currentPlaygroundFile ? code : f.content,
+                        })),
+                        entryPoint: currentPlaygroundFile,
+                    }),
+                });
+
+                const result: RunResult = await response.json();
+                const duration = Date.now() - startTime;
+
+                if (executionTime) {
+                    executionTime.textContent = `${duration}ms`;
+                }
+
+                if (result.success) {
+                    if (status) {
+                        status.textContent = '✓ Success';
+                        status.className = 'status success';
+                    }
+
+                    let outputHtml = `<pre>${escapeHtml(result.output)}</pre>`;
+                    if (result.error) {
+                        outputHtml += `<div class="error-output"><strong>Warnings:</strong>\n${escapeHtml(result.error)}</div>`;
+                    }
+                    if (output) {
+                        output.innerHTML = outputHtml;
+                    }
+                } else {
+                    if (status) {
+                        status.textContent = '✗ Error';
+                        status.className = 'status error';
+                    }
+
+                    let errorHtml = '';
+                    if (result.output) {
+                        errorHtml += `<pre>${escapeHtml(result.output)}</pre>`;
+                    }
+                    if (result.error) {
+                        errorHtml += `<div class="error-output"><strong>Error:</strong>\n${escapeHtml(result.error)}</div>`;
+                    }
+                    if (output) {
+                        output.innerHTML = errorHtml;
+                    }
+                }
+                return;
+            } catch (error) {
+                if (status) {
+                    status.textContent = '✗ Error';
+                    status.className = 'status error';
+                }
+                if (output) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    output.innerHTML = `<div class="error-output">Network error: ${errorMessage}</div>`;
+                }
+                return;
+            }
+        }
+    }
+
     // Check if this is a DOM demo - execute client-side
     if (currentDemo && isDOMDemo(currentDemo)) {
         const result = executeClientSide(code);
@@ -402,6 +1041,23 @@ async function runModifiedCode(): Promise<void> {
 
 // Reset to original code
 function resetCode(): void {
+    // In playground mode, don't reset - show a message instead
+    if (isPlaygroundMode) {
+        if (!confirm('Reset this playground file to its last saved state? Unsaved changes will be lost.')) {
+            return;
+        }
+        // Reload from localStorage
+        if (playgroundWorkspace) {
+            const file = playgroundWorkspace.files.find((f) => f.name === currentPlaygroundFile);
+            if (file && monacoEditor) {
+                monacoEditor.setValue(file.content);
+                originalCode = file.content;
+                updateModifiedBadge(false);
+            }
+        }
+        return;
+    }
+
     if (monacoEditor && originalCode) {
         monacoEditor.setValue(originalCode);
         updateModifiedBadge(false);
@@ -477,6 +1133,18 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
 
 // Run a demo
 async function runDemo(id: string, name: string): Promise<void> {
+    // Save playground state if we're leaving playground mode
+    if (isPlaygroundMode && playgroundWorkspace && monacoEditor) {
+        const currentFile = playgroundWorkspace.files.find((f) => f.name === currentPlaygroundFile);
+        if (currentFile) {
+            currentFile.content = monacoEditor.getValue();
+            savePlaygroundToLocalStorage(playgroundWorkspace);
+        }
+    }
+
+    // Exit playground mode
+    isPlaygroundMode = false;
+
     const startTime = Date.now();
 
     // Update active state
@@ -826,7 +1494,13 @@ function init(): void {
     if (typeof window !== 'undefined') {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js';
-        script.onload = () => initMonacoEditor();
+        script.onload = () => {
+            initMonacoEditor();
+            // Load playground by default after Monaco is ready
+            monacoReady.then(() => {
+                loadPlayground();
+            });
+        };
         document.head.appendChild(script);
     }
 }
@@ -841,3 +1515,8 @@ init();
 (window as any).toggleHelp = toggleHelp;
 (window as any).runModifiedCode = runModifiedCode;
 (window as any).resetCode = resetCode;
+(window as any).loadPlayground = loadPlayground;
+(window as any).createPlaygroundFile = createPlaygroundFile;
+(window as any).deletePlaygroundFile = deletePlaygroundFile;
+(window as any).switchPlaygroundFile = switchPlaygroundFile;
+(window as any).toggleExecutionMode = toggleExecutionMode;
