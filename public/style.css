@@ -797,9 +797,12 @@ kbd {
 
 .playground-file-controls {
     margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
 }
 
-.new-file-btn {
+.new-file-btn,
+.reset-playground-btn {
     background: #2d2d30;
     border: 1px solid #3e3e42;
     color: #d4d4d4;
@@ -811,12 +814,17 @@ kbd {
     align-items: center;
     gap: 6px;
     transition: all 0.2s;
-    width: 100%;
+    flex: 1;
 }
 
 .new-file-btn:hover {
     background: #37373d;
     border-color: #007acc;
+}
+
+.reset-playground-btn:hover {
+    background: #37373d;
+    border-color: #f48771;
 }
 
 .playground-files {
